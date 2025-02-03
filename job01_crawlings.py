@@ -17,6 +17,7 @@ from selenium.webdriver.common.by import By
 import datetime
 import time
 
+
 #패키지 정상 다운로드 확인
 # print("librarise are  installed succesfully")
 
@@ -32,33 +33,43 @@ url='https://m.kinolights.com/discover/explore'
 driver.get(url)
 time.sleep(7)
 
-movie_titles = []
+target_movie_count = 500
+movie_link = set()
 
-while len(movie_titles) <50:
+
+while len(movie_link) < target_movie_count:
     # 현재 페이지에서 영화 제목들 추출
-    # 'poster-container' 클래스를 기반으로 추출
-    movies = driver.find_elements(By.CLASS_NAME, "poster-container")
+    time.sleep(1)#wait for movies to load
 
-    #영화제목추출
-    for movie in movies:
-        try:
-            title = movie.get_attribute("title")  # 'title' 속성에서 영화 제목 추출
-            if title and title not in movie_titles:
-                movie_titles.append(title)
-        except Exception as e:
-            print(f"Error: {e}")
-            continue
-        if len(movie_titles)>=50:
-            break
+    #movie link crawling
+    try:
+        movies = driver.find_elements(By.XPATH,"//*[@id='contents']/div/div/div[3]/div[2]//a")
+        for movie in movies:
+            link = movie.get_attribute('href')
+            if link:
+                movie_link.add(link)
+    except Exception as e:
+        print(f"Error collecting movie links: {e}")
+        continue
+    # #if not enough movies, scroll down 8units to trigger loading of more movies
+    # if len(movie_link) < target_movie_count:
+    #     scroll_down(units=8, sleep_time=0.7)  # 스크롤을 5번 내리며, 각 스크롤 후 1초 대기
+    #     print(f"Collected {len(movie_link)} movies so far...")
+    if len(movie_link)>= target_movie_count:
+        break
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-
     time.sleep(1)
 
 # 수집된 500개 영화 제목 출력
-for title in movie_titles[:50]:
+for title in list(movie_link)[:target_movie_count]:
     print(title)
+# DataFrame으로 변환 후 CSV로 저장
+df = pd.DataFrame(list(movie_link), columns=["movie_link"])
+
+df.to_csv('./crawling_data/movie_review03_{}.csv'.format(
+    datetime.datetime.now().strftime('%Y%m%d')), index=False)
 
 # 브라우저 종료
 driver.quit()
 
-print(f"총 {len(movie_titles)}개의 제목을 수집했습니다.")
+print(f"총 {len(movie_link)}개의 제목을 수집했습니다.")
