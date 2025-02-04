@@ -34,7 +34,7 @@ driver.get(url)
 time.sleep(7)
 
 target_movie_count = 500
-movie_link = set()
+movie_link = []
 
 
 while len(movie_link) < target_movie_count:
@@ -46,8 +46,8 @@ while len(movie_link) < target_movie_count:
         movies = driver.find_elements(By.XPATH,"//*[@id='contents']/div/div/div[3]/div[2]//a")
         for movie in movies:
             link = movie.get_attribute('href')
-            if link:
-                movie_link.add(link)
+            if link and link not in movie_link: #중복을 피하기 위해 확인
+                movie_link.append(link)
     except Exception as e:
         print(f"Error collecting movie links: {e}")
         continue
@@ -61,10 +61,10 @@ while len(movie_link) < target_movie_count:
     time.sleep(1)
 
 # 수집된 500개 영화 제목 출력
-for title in list(movie_link)[:target_movie_count]:
+for title in movie_link[:target_movie_count]:
     print(title)
 # DataFrame으로 변환 후 CSV로 저장
-df = pd.DataFrame(list(movie_link), columns=["movie_link"])
+df = pd.DataFrame(movie_link[:target_movie_count], columns=["movie_link"])
 
 df.to_csv('./crawling_data/movie_review03_{}.csv'.format(
     datetime.datetime.now().strftime('%Y%m%d')), index=False)
