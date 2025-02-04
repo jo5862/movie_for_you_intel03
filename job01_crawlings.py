@@ -31,7 +31,9 @@ driver = webdriver.Chrome(service=service, options=options)
 
 url='https://m.kinolights.com/discover/explore'
 driver.get(url)
-time.sleep(7)
+time.sleep(2)
+
+
 
 target_movie_count = 500
 movie_link = []
